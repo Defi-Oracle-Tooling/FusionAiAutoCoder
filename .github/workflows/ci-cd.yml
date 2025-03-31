@@ -6,12 +6,18 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: "3.10"
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.8, 3.9, "3.10"]
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v3
@@ -20,6 +26,9 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements.txt
         
     - name: Install dependencies
       run: |
@@ -38,21 +47,46 @@ jobs:
       run: |
         pytest
         
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          .pytest_cache
+          coverage.xml
+        retention-days: 7
+        
   build:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    permissions:
+      contents: read
+      packages: write
     
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+      
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v2
       with:
-        registry: ghcr.io
+        registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
@@ -60,25 +94,41 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ghcr.io/${{ github.repository }}
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
+          type=semver,pattern={{version}}
           type=ref,event=branch
           type=sha,format=short
+        labels: |
+          org.opencontainers.image.title=FusionAiAutoCoder
+          org.opencontainers.image.description=AI-powered automated coding system
           
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
-        file: ./docker-templates/docker-ncads_v4.yml
+        file: ./docker-templates/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         
   deploy-dev:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    environment: development
+    environment:
+      name: development
+      url: ${{ steps.deploy.outputs.app_url }}
+    concurrency: 
+      group: dev-deployment
+      cancel-in-progress: true
     
     steps:
     - uses: actions/checkout@v3
@@ -89,15 +139,27 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         
     - name: Deploy to development environment
+      id: deploy
+      env:
+        RESOURCE_GROUP: fusionai-resources
+        CLUSTER_NAME: fusionai-aks
+        NAMESPACE: development
       run: |
-        az aks get-credentials --resource-group fusionai-resources --name fusionai-aks
-        kubectl apply -f kubernetes/dev/
+        az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+        kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+        kubectl apply -f kubernetes/dev/ -n $NAMESPACE
+        echo "app_url=https://dev.fusionai.example.com" >> $GITHUB_OUTPUT
         
   deploy-prod:
-    needs: build
+    needs: [build, deploy-dev]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment: production
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.app_url }}
+    concurrency: 
+      group: prod-deployment
+      cancel-in-progress: false
     
     steps:
     - uses: actions/checkout@v3
@@ -108,6 +170,13 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         
     - name: Deploy to production environment
+      id: deploy
+      env:
+        RESOURCE_GROUP: fusionai-resources
+        CLUSTER_NAME: fusionai-aks
+        NAMESPACE: production
       run: |
-        az aks get-credentials --resource-group fusionai-resources --name fusionai-aks
-        kubectl apply -f kubernetes/prod/
+        az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+        kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+        kubectl apply -f kubernetes/prod/ -n $NAMESPACE
+        echo "app_url=https://fusionai.example.com" >> $GITHUB_OUTPUT

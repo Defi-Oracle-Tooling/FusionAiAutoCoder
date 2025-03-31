@@ -57,7 +57,7 @@ resource "azurerm_network_security_group" "main" {
   }
 }
 
-# Azure Kubernetes Service
+# AKS cluster
 resource "azurerm_kubernetes_cluster" "main" {
   name                = "fusionai-aks"
   location            = azurerm_resource_group.main.location
@@ -86,11 +86,8 @@ resource "azurerm_kubernetes_cluster" "main" {
     load_balancer_sku = "standard"
   }
   
-  addon_profile {
-    oms_agent {
-      enabled = true
-      log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
-    }
+  oms_agent {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   }
 }
 
@@ -98,12 +95,11 @@ resource "azurerm_kubernetes_cluster" "main" {
 resource "azurerm_kubernetes_cluster_node_pool" "gpu" {
   name                  = "gpupool"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id
-  vm_size               = "Standard_NC24ads_A100_v4"  # Using available GPU SKU
-  node_count            = 1
-  max_count             = 3
-  min_count             = 0
-  enable_auto_scaling   = true
-  vnet_subnet_id        = azurerm_subnet.aks.id
+  vm_size              = "Standard_NC24ads_A100_v4"  # Using available GPU SKU
+  node_count           = 1
+  max_count            = 3
+  min_count            = 0
+  vnet_subnet_id       = azurerm_subnet.aks.id
   
   node_labels = {
     "node-type" = "gpu"
@@ -124,12 +120,11 @@ resource "azurerm_kubernetes_cluster_node_pool" "gpu" {
 resource "azurerm_kubernetes_cluster_node_pool" "memory" {
   name                  = "mempool"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id
-  vm_size               = "Standard_E8s_v3"  # Memory-optimized
-  node_count            = 1
-  max_count             = 3
-  min_count             = 0
-  enable_auto_scaling   = true
-  vnet_subnet_id        = azurerm_subnet.aks.id
+  vm_size              = "Standard_E8s_v3"  # Memory-optimized
+  node_count           = 1
+  max_count            = 3
+  min_count           = 0
+  vnet_subnet_id      = azurerm_subnet.aks.id
   
   node_labels = {
     "node-type" = "memory"

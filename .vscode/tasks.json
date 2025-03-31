@@ -1,0 +1,115 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Type Check - Full",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "mypy",
+                "pyright",
+                "flake8-types",
+                "pytype",
+                "monkeytype",
+                "ninja-types"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "mypy",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "mypy",
+                "src",
+                "tests",
+                "--strict"
+            ],
+            "problemMatcher": {
+                "owner": "python",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.+):(\\d+): (\\w+): (.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "pyright",
+            "type": "shell",
+            "command": "pyright",
+            "args": [
+                "src",
+                "tests"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "flake8-types",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "flake8",
+                "src",
+                "tests",
+                "--select=ANN"
+            ],
+            "problemMatcher": {
+                "owner": "python",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.+):(\\d+):(\\d+): (.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "pytype",
+            "type": "shell",
+            "command": "pytype",
+            "args": [
+                "src",
+                "--config=pytype.cfg"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "monkeytype",
+            "type": "shell",
+            "command": "monkeytype",
+            "args": [
+                "run",
+                "-c",
+                "monkeytype.ini",
+                "pytest"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ninja-types",
+            "type": "shell",
+            "command": "ninja-types",
+            "args": [
+                "check",
+                "src"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

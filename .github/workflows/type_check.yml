@@ -1,0 +1,70 @@
+name: Type Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytype monkeytype ninja-types
+        
+    - name: Run mypy
+      run: mypy src tests --strict
+        
+    - name: Run pyright
+      uses: jakebailey/pyright-action@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Run pytest with type checking
+      run: |
+        pytest --mypy --typeguard-packages=src
+        
+    - name: Run flake8 type checking
+      run: |
+        flake8 src tests --select ANN
+
+    - name: Run pytype
+      run: |
+        pytype src --config=pytype.cfg
+
+    - name: Run monkeytype
+      run: |
+        monkeytype run -c monkeytype.ini pytest
+        monkeytype list-modules src
+        monkeytype apply src
+
+    - name: Run ninja-types
+      run: |
+        ninja-types check src
+
+    - name: Upload type checking results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: type-check-results
+        path: |
+          .mypy_cache
+          pytype_output
+          monkeytype.sqlite3
+          ninja-types.log
+        retention-days: 7

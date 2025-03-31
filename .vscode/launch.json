@@ -1,0 +1,70 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: CLI Generate",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/cli.py",
+            "args": [
+                "generate",
+                "Create a function to validate email addresses",
+                "--language",
+                "python"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: CLI Optimize",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/cli.py",
+            "args": [
+                "optimize",
+                "${file}",
+                "--target",
+                "performance"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: API Server",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "src.api:app",
+                "--reload",
+                "--port",
+                "8080"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Run Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-v",
+                "--tb=short"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

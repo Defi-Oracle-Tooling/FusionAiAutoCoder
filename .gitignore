@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Type checking
+.mypy_cache/
+.pytype/
+.pyre/
+.pytypedeps/
+
 # Distribution / packaging
 dist/
 build/
@@ -16,35 +22,52 @@ htmlcov/
 .cache
 coverage.xml
 *.cover
+.pytest_cache/
 
 # Virtual environments
 venv/
 env/
 ENV/
+.venv/
 
-# VS Code
+# IDE
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.idea/
+*.swp
+*.swo
 
 # Environment variables
 .env
 .env.local
+.env.*.local
 
 # Logs
 logs/
 *.log
+pip-log.txt
 
 # Azure
 .azure/
+azure.*.json
 
 # Terraform
 .terraform/
 *.tfstate
 *.tfstate.backup
 *.tfvars
+.terraformrc
+terraform.rc
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
 # Other
 .DS_Store
+*.bak
+*.tmp
+*.temp

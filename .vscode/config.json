@@ -1,6 +1,0 @@
-{
-    "recommendations": [
-        "ms-devlabs.aicopilot", // Example extension ID for the AI Toolkit plugin
-        "ms-vscode.vscode-insiders"
-    ]
-}

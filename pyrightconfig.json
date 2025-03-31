@@ -1,0 +1,12 @@
+{
+    "venvPath": ".",
+    "venv": ".venv",
+    "extraPaths": [
+        ".venv/lib/python3.8/site-packages"
+    ],
+    "reportMissingImports": true,
+    "pythonVersion": "3.11",
+    "typeCheckingMode": "strict",
+    "useLibraryCodeForTypes": true,
+    "reportMissingTypeStubs": false
+}
