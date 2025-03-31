@@ -1,0 +1,6 @@
+onnxruntime
+# If an Ollama package is available, include it here
+# ollama-client
+
+autogen
+# ...existing dependencies...
