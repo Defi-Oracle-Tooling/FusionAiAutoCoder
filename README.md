@@ -1,77 +1,148 @@
 # FusionAiAutoCoder
 
+FusionAiAutoCoder is an Agentic IDE that leverages AI tools, multi-agent orchestration, and Azure AI Foundry integration to provide automated coding assistance for developers.
+
 ## Overview
-FusionAiAutoCoder is a next-generation Agentic IDE designed to super-scale code development through fully automated, multi-agent processes. It integrates advanced AI tools, multi-agent orchestration, and dynamic prompt engineering to revolutionize software development.
 
-## Features
-- Automated project scaffolding.
-- Multi-agent orchestration for code generation, testing, and deployment.
-- Integration with CI/CD pipelines.
+FusionAiAutoCoder combines the power of multi-agent systems, local processing, and cloud-based AI services to provide an intelligent coding environment. The system can generate code, optimize existing implementations, and help with deployment operations, all through a single unified interface.
 
-## Usage
-1. Run the scaffold script to create a new project:
+Key features include:
+- **Multi-Agent Orchestration**: Uses [AutoGen](https://github.com/microsoft/autogen) to create specialized agents for different coding tasks
+- **Azure AI Foundry Integration**: Leverages Azure's advanced AI services for improved code generation and optimization
+- **Hybrid Processing**: Intelligently routes tasks between local agents and cloud services based on complexity and resource requirements
+- **RESTful API**: Provides programmatic access to all functionality via a well-documented API
+- **Kubernetes Deployment**: Includes configurations for both development and production environments
+- **GPU Acceleration**: Supports GPU acceleration for compute-intensive operations
+
+## Architecture
+
+FusionAiAutoCoder is built with a modular architecture:
+
+```
+┌─────────────────┐    ┌──────────────────────┐    ┌────────────────┐
+│  Client/User    │───▶│  API Service Layer   │───▶│ Auth/Security  │
+└─────────────────┘    └──────────────────────┘    └────────────────┘
+                                │
+             ┌─────────────────┴────────────────┐
+             ▼                                   ▼
+┌──────────────────────┐              ┌────────────────────────┐
+│   Agent Orchestrator │◀────────────▶│  Azure AI Integration  │
+└──────────────────────┘              └────────────────────────┘
+      │         │                               │
+      │         │                               │
+      ▼         ▼                               ▼
+┌───────────┐ ┌───────────┐             ┌─────────────────┐
+│ Local     │ │ Local     │             │ Azure AI Foundry│
+│ Agents    │ │ Processing│             │ Services        │
+└───────────┘ └───────────┘             └─────────────────┘
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.8+ 
+- Docker (for containerized deployment)
+- Kubernetes (for production deployment)
+- Azure subscription (for Azure AI Foundry integration)
+- OpenAI API key (for AutoGen)
+
+### Installation
+
+1. Clone the repository:
    ```bash
-   ./scripts/scaffold_project.sh <project_name>
+   git clone https://github.com/yourusername/FusionAiAutoCoder.git
+   cd FusionAiAutoCoder
    ```
-2. Navigate to the project directory and activate the virtual environment:
+
+2. Set up the development environment:
    ```bash
-   cd <project_name>
-   source venv/bin/activate
+   ./scripts/setup_dev_env.sh
    ```
-3. Install dependencies:
+
+3. Create and configure your `.env` file from the template:
+   ```bash
+   cp .env.template .env
+   # Edit .env with your credentials
+   ```
+
+4. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-4. Run tests:
-   ```bash
-   pytest tests/
-   ```
 
-## CI/CD Setup
-1. Navigate to the `.github/workflows/` directory.
-2. Edit the `ci.yml` file to define your CI/CD pipeline.
-3. Push changes to your repository to trigger the pipeline.
+### Running Locally
 
-## Team Enablement
+To run the main application:
+```bash
+python src/main.py
+```
 
-### Training
-- Conduct training sessions for team members on Azure AI Foundry and AKS.
+To start the API server:
+```bash
+python -m uvicorn src.api:app --host 0.0.0.0 --port 8080 --reload
+```
 
-### Feedback
-- Establish feedback loops using retrospectives and surveys.
+Alternatively, you can use the provided Makefile commands:
+```bash
+make run-api
+```
 
-## Architecture and Process Flow
+### Docker Deployment
 
-### Refined Requirements
-- Validated with stakeholders as of March 30, 2025.
+Build and run with Docker:
+```bash
+make build-docker
+make run-docker
+```
 
-### Updated Architectural Diagrams
-- Diagrams and process flows have been updated to reflect the current blueprint.
+### Kubernetes Deployment
 
-For more details, refer to the `docs/usage.md` file.
+Deploy to a development environment:
+```bash
+make deploy-dev
+```
 
-## VM/VMSS Setup Instructions
+Deploy to a production environment:
+```bash
+make deploy-prod
+```
 
-1. **Choose Your VM/VMSS**
-   - For single instances, create a VM with sufficient CPU/GPU resources using your preferred cloud provider.
-   - For scaling, use Azure VM Scale Sets (VMSS).
+## API Documentation
 
-2. **VS Code Insiders & AI Toolkit**
-   - Install [VS Code Insiders](https://code.visualstudio.com/blogs/2025/02/24/introducing-copilot-agent-mode) on your VM.
-   - From the Extensions Marketplace, install the **AI Toolkit** plugin to simplify generative AI development.
+The API documentation is available at `/docs` when the server is running. A comprehensive guide is also available in the [API Documentation](docs/api.md) file.
 
-3. **ONNX / Ollama Setup**
-   - Convert AI models to [ONNX](https://onnx.ai/) format and install ONNX Runtime.
-   - Or, for larger language models, install and configure [Ollama](https://ollama.ai/) ensuring sufficient VM resources.
+## Usage Examples
 
-4. **AutoGen Integration**
-   - Install and configure [AutoGen](https://github.com/microsoft/autogen) to orchestrate multiple AI agents.
-   - Use AutoGen Studio for a low-code prototyping interface.
+For detailed usage examples, see the [Usage Guide](docs/usage.md).
 
-5. **Enable Multiple AI Agents**
-   - Integrate Azure AI Agent Service or [Semantic Kernel](https://github.com/microsoft/semantic-kernel) to manage diverse tasks.
+### Basic Example:
 
-6. **Optimization & Additional Tools**
-   - Enable GPU acceleration.
-   - Use Docker containers to manage dependencies.
-   - Set up monitoring tools (e.g., Application Insights) for performance tracking.
+```python
+from src.main import hybrid_workflow
+
+# Generate code
+result = hybrid_workflow(
+    task_type="code_generation",
+    task_data={
+        "prompt": "Create a function to calculate the factorial of a number",
+        "language": "python",
+        "complexity": "low"
+    }
+)
+
+print(result["code"])
+```
+
+## Contributing
+
+Contributions are welcome! Please check out our [Contribution Guidelines](CONTRIBUTING.md) for more information.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+- [AutoGen](https://github.com/microsoft/autogen) - Multi-agent conversation framework
+- Azure AI Services - For advanced AI capabilities

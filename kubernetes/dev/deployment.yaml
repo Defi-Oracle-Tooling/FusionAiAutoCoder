@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fusionaicoder
+  namespace: fusionai
+  labels:
+    app: fusionaicoder
+    environment: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fusionaicoder
+  template:
+    metadata:
+      labels:
+        app: fusionaicoder
+    spec:
+      nodeSelector:
+        workload: ai-processing
+      containers:
+        - name: fusionaicoder
+          image: ghcr.io/yourusername/fusionaicoder:develop
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+          ports:
+            - containerPort: 8080
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          env:
+            - name: ENVIRONMENT
+              value: "development"
+            - name: PORT
+              value: "8080"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: ENABLE_GPU_ACCELERATION
+              value: "true"
+            - name: USE_LOCAL_MODELS
+              value: "true"
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-credentials
+                  key: tenant-id
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-credentials
+                  key: client-id
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-credentials
+                  key: client-secret
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-credentials
+                  key: api-key
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+            - name: logs-volume
+              mountPath: /app/logs
+      volumes:
+        - name: config-volume
+          configMap:
+            name: fusionaicoder-config
+        - name: logs-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fusionaicoder
+  namespace: fusionai
+spec:
+  selector:
+    app: fusionaicoder
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fusionaicoder
+  namespace: fusionai
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+    - host: dev.fusionaicoder.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fusionaicoder
+                port:
+                  number: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fusionaicoder-config
+  namespace: fusionai
+data:
+  config.json: |
+    {
+      "api": {
+        "version": "1.0.0",
+        "cors_origins": ["*"],
+        "rate_limit": 100
+      },
+      "agent_config": {
+        "max_agents": 4,
+        "timeout_seconds": 60
+      }
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-credentials
+  namespace: fusionai
+type: Opaque
+data:
+  api-key: base64encodedkey== # Replace with actual base64 encoded API key

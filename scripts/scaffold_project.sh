@@ -1,92 +1,380 @@
 #!/bin/bash
-# filepath: scripts/scaffold_project.sh
-# A simple script to scaffold a new project structure
+# Project Scaffolding Script for FusionAiAutoCoder
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <project_name>"
-  exit 1
-fi
+set -e
 
-PROJECT_NAME=$1
+# Default values
+PROJECT_NAME="my-ai-project"
+PROJECT_TYPE="standard"
+LANGUAGE="python"
+OUTPUT_DIR="$(pwd)"
 
-# Add error handling for existing project directory
-if [ -d "$PROJECT_NAME" ]; then
-  echo "Error: Project '$PROJECT_NAME' already exists."
-  exit 1
-fi
+# Display help
+function show_help {
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help                Show this help message"
+    echo "  -n, --name NAME           Project name (default: my-ai-project)"
+    echo "  -t, --type TYPE           Project type: standard, web, api, ml (default: standard)"
+    echo "  -l, --language LANGUAGE   Programming language: python, typescript, javascript (default: python)"
+    echo "  -o, --output-dir DIR      Output directory (default: current directory)"
+    echo ""
+    echo "Example:"
+    echo "  $0 --name my-cool-project --type api --language typescript"
+    exit 0
+}
 
-# Create project directory structure
-mkdir -p "$PROJECT_NAME"/{src,tests,docs,scripts,config,data}
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        -h|--help)
+            show_help
+            ;;
+        -n|--name)
+            PROJECT_NAME="$2"
+            shift
+            shift
+            ;;
+        -t|--type)
+            PROJECT_TYPE="$2"
+            shift
+            shift
+            ;;
+        -l|--language)
+            LANGUAGE="$2"
+            shift
+            shift
+            ;;
+        -o|--output-dir)
+            OUTPUT_DIR="$2"
+            shift
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            ;;
+    esac
+done
 
-# Create initial files
-touch "$PROJECT_NAME"/src/main.py "$PROJECT_NAME"/src/utils.py
-touch "$PROJECT_NAME"/tests/test_main.py
-touch "$PROJECT_NAME"/docs/usage.md
-touch "$PROJECT_NAME"/README.md
+PROJECT_DIR="$OUTPUT_DIR/$PROJECT_NAME"
 
-echo "# $PROJECT_NAME" > "$PROJECT_NAME"/README.md
-echo "# Usage instructions" > "$PROJECT_NAME"/docs/usage.md
-echo "# .gitignore" > "$PROJECT_NAME"/.gitignore
-echo "__pycache__/\n.env\n*.log" >> "$PROJECT_NAME"/.gitignore
+echo "Creating project: $PROJECT_NAME"
+echo "Project type: $PROJECT_TYPE"
+echo "Language: $LANGUAGE"
+echo "Output directory: $PROJECT_DIR"
 
-# Create a virtual environment
-python3 -m venv "$PROJECT_NAME"/venv
+# Create the project directory
+mkdir -p "$PROJECT_DIR"
 
-# Generate requirements.txt
-cat <<EOL > "$PROJECT_NAME"/requirements.txt
-pytest
-black
-flake8
+# Create common directories
+mkdir -p "$PROJECT_DIR/src"
+mkdir -p "$PROJECT_DIR/tests"
+mkdir -p "$PROJECT_DIR/docs"
+mkdir -p "$PROJECT_DIR/scripts"
+mkdir -p "$PROJECT_DIR/config"
+
+# Create Python-specific files if language is Python
+if [ "$LANGUAGE" == "python" ]; then
+    # Create virtual environment
+    echo "Creating Python virtual environment..."
+    python3 -m venv "$PROJECT_DIR/venv"
+    
+    # Create setup.py
+    cat > "$PROJECT_DIR/setup.py" << EOL
+from setuptools import setup, find_packages
+
+setup(
+    name="${PROJECT_NAME}",
+    version="0.1.0",
+    packages=find_packages(),
+    install_requires=[
+        "pytest",
+        "black",
+        "flake8",
+    ],
+)
+EOL
+    
+    # Create requirements.txt
+    cat > "$PROJECT_DIR/requirements.txt" << EOL
+# Development dependencies
+pytest==7.3.1
+black==23.3.0
+flake8==6.0.0
+pytest-cov==4.1.0
+
+# Project dependencies
 EOL
 
-# Install dependencies in the virtual environment
-source "$PROJECT_NAME"/venv/bin/activate
-pip install -r "$PROJECT_NAME"/requirements.txt
-deactivate
+    # Create src module
+    mkdir -p "$PROJECT_DIR/src/$PROJECT_NAME"
+    touch "$PROJECT_DIR/src/$PROJECT_NAME/__init__.py"
+    
+    # Create main.py
+    cat > "$PROJECT_DIR/src/$PROJECT_NAME/main.py" << EOL
+"""Main module for $PROJECT_NAME."""
 
-# Add setup script
-echo "#!/bin/bash" > "$PROJECT_NAME"/scripts/setup.sh
-echo "source ../venv/bin/activate" >> "$PROJECT_NAME"/scripts/setup.sh
-chmod +x "$PROJECT_NAME"/scripts/setup.sh
+def main():
+    """Run the main function."""
+    print("Hello from $PROJECT_NAME!")
 
-# Add CI/CD pipeline setup instructions
-echo "# CI/CD Pipeline Setup" > "$PROJECT_NAME"/docs/cicd.md
-echo "Instructions for setting up CI/CD pipelines." >> "$PROJECT_NAME"/docs/cicd.md
+if __name__ == "__main__":
+    main()
+EOL
+    
+    # Create tests
+    mkdir -p "$PROJECT_DIR/tests"
+    touch "$PROJECT_DIR/tests/__init__.py"
+    
+    cat > "$PROJECT_DIR/tests/test_main.py" << EOL
+"""Tests for main module."""
+from src.$PROJECT_NAME.main import main
 
-# Add placeholder for CI configuration
-touch "$PROJECT_NAME"/.github/workflows/ci.yml
-echo "# Placeholder for GitHub Actions CI configuration" > "$PROJECT_NAME"/.github/workflows/ci.yml
+def test_main():
+    """Test the main function."""
+    # This is just a placeholder test
+    assert True
+EOL
 
-# Placeholder for AKS setup scripts
-# Add commands to set up Azure Kubernetes Service (AKS) with GPU and general compute node pools.
-
-# Add secure connectivity setup
-# Placeholder for configuring VNets, NSGs, and VPN/ExpressRoute
-# echo "Configuring secure connectivity..."
-
-# Add commands to set up ARM templates or Terraform scripts for resource provisioning
-cat <<EOT > arm_templates/main.json
+elif [ "$LANGUAGE" == "typescript" ] || [ "$LANGUAGE" == "javascript" ]; then
+    # Create package.json
+    if [ "$LANGUAGE" == "typescript" ]; then
+        cat > "$PROJECT_DIR/package.json" << EOL
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "resources": [
-    {
-      "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2021-03-01",
-      "name": "DevBox",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "Standard_DS3_v2"
-        }
-      }
-    }
-  ]
+  "name": "${PROJECT_NAME}",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.11",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "eslint": "^8.38.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {}
 }
-EOT
+EOL
+        
+        # Create tsconfig.json
+        cat > "$PROJECT_DIR/tsconfig.json" << EOL
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.test.ts"]
+}
+EOL
+        
+        # Create src/index.ts
+        cat > "$PROJECT_DIR/src/index.ts" << EOL
+/**
+ * Main entry point for $PROJECT_NAME
+ */
 
-# Add instructions to deploy the ARM template
-az deployment group create --resource-group myResourceGroup --template-file arm_templates/main.json
+export function main(): void {
+  console.log('Hello from $PROJECT_NAME!');
+}
 
-# Final message
-echo "Project scaffold for '$PROJECT_NAME' created successfully."
+if (require.main === module) {
+  main();
+}
+EOL
+        
+        # Create test file
+        mkdir -p "$PROJECT_DIR/src/__tests__"
+        cat > "$PROJECT_DIR/src/__tests__/index.test.ts" << EOL
+import { main } from '../index';
+
+describe('main', () => {
+  it('should execute without errors', () => {
+    expect(() => main()).not.toThrow();
+  });
+});
+EOL
+        
+    else
+        # JavaScript version
+        cat > "$PROJECT_DIR/package.json" << EOL
+{
+  "name": "${PROJECT_NAME}",
+  "version": "0.1.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src/**/*.js",
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.38.0",
+    "jest": "^29.5.0"
+  },
+  "dependencies": {}
+}
+EOL
+        
+        # Create src/index.js
+        cat > "$PROJECT_DIR/src/index.js" << EOL
+/**
+ * Main entry point for $PROJECT_NAME
+ */
+
+function main() {
+  console.log('Hello from $PROJECT_NAME!');
+}
+
+if (require.main === module) {
+  main();
+}
+
+module.exports = { main };
+EOL
+        
+        # Create test file
+        mkdir -p "$PROJECT_DIR/src/__tests__"
+        cat > "$PROJECT_DIR/src/__tests__/index.test.js" << EOL
+const { main } = require('../index');
+
+describe('main', () => {
+  it('should execute without errors', () => {
+    expect(() => main()).not.toThrow();
+  });
+});
+EOL
+    fi
+fi
+
+# Create a basic README.md
+cat > "$PROJECT_DIR/README.md" << EOL
+# $PROJECT_NAME
+
+## Description
+
+A brief description of the project.
+
+## Installation
+
+\`\`\`bash
+# Clone the repository
+git clone https://github.com/username/$PROJECT_NAME.git
+cd $PROJECT_NAME
+\`\`\`
+
+### Python Setup
+\`\`\`bash
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\\Scripts\\activate
+
+# Install dependencies
+pip install -r requirements.txt
+\`\`\`
+
+### JavaScript/TypeScript Setup
+\`\`\`bash
+# Install dependencies
+npm install
+\`\`\`
+
+## Usage
+
+Describe how to use the project.
+
+## Testing
+
+### Python
+\`\`\`bash
+pytest
+\`\`\`
+
+### JavaScript/TypeScript
+\`\`\`bash
+npm test
+\`\`\`
+
+## License
+
+This project is licensed under the ISC License.
+EOL
+
+# Create .gitignore
+cat > "$PROJECT_DIR/.gitignore" << EOL
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+.coverage
+htmlcov/
+
+# JavaScript/TypeScript
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+dist/
+coverage/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+EOL
+
+echo "Project scaffold complete!"
+echo "To get started:"
+echo "  cd $PROJECT_DIR"
+
+if [ "$LANGUAGE" == "python" ]; then
+    echo "  source venv/bin/activate"
+    echo "  pip install -r requirements.txt"
+elif [ "$LANGUAGE" == "typescript" ] || [ "$LANGUAGE" == "javascript" ]; then
+    echo "  npm install"
+    echo "  npm test"
+fi

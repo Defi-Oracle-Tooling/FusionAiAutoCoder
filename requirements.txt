@@ -1,6 +1,28 @@
-onnxruntime
+onnxruntime>=1.15.0
 # If an Ollama package is available, include it here
 # ollama-client
 
-autogen
-# ...existing dependencies...
+# Core dependencies
+autogen>=0.2.11
+azure-identity>=1.13.0
+azure-mgmt-resource>=22.0.0
+azure-mgmt-compute>=30.0.0
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Testing and development
+pytest>=7.4.0
+black>=23.3.0
+flake8>=6.0.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0  # For testing FastAPI
+
+# Azure AI services (mock replacement)
+# azure-ai-foundry # Uncomment when package is available
+
+# Utilities
+semantic-kernel>=0.3.0  # For semantic functions
