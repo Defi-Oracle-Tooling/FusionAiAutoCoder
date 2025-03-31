@@ -91,28 +91,24 @@ resource "azurerm_kubernetes_cluster" "main" {
   }
 }
 
-# GPU Node Pool for intensive tasks
+# GPU node pool for intensive workloads
 resource "azurerm_kubernetes_cluster_node_pool" "gpu" {
   name                  = "gpupool"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id
-  vm_size              = "Standard_NC24ads_A100_v4"  # Using available GPU SKU
-  node_count           = 1
-  max_count            = 3
-  min_count            = 0
-  vnet_subnet_id       = azurerm_subnet.aks.id
-  
+  vm_size               = "Standard_NCads_H100_v5"
+  node_count            = 1
+
+  enable_auto_scaling   = true
+  min_count             = 0
+  max_count             = 3
+
   node_labels = {
-    "node-type" = "gpu"
-    "workload"  = "ai-processing"
+    "workload" = "ai-processing"
   }
-  
-  node_taints = [
-    "gpu=true:NoSchedule"
-  ]
-  
+
   tags = {
     Environment = "Production"
-    NodeType    = "GPU"
+    Project     = "FusionAiAutoCoder"
   }
 }
 

@@ -216,3 +216,21 @@ For advanced configuration options, edit the configuration files in the `src/con
 ## Support and Feedback
 
 For support or to provide feedback, please open an issue on the GitHub repository or contact the project maintainers.
+
+## CLI Usage Examples
+
+### Generate Code
+```bash
+python src/cli.py generate "Create a function to validate email addresses" --language python
+```
+
+### Optimize Code
+```bash
+python src/cli.py optimize /path/to/code.py --target performance
+```
+
+### Deploy Infrastructure
+```bash
+git push origin main
+# The deploy.yml workflow will automatically provision infrastructure and deploy the application.
+```

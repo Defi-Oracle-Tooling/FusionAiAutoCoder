@@ -34,10 +34,12 @@ This document provides detailed implementation instructions for the FusionAiAuto
 4. Configure AutoGen for multi-agent orchestration
 
 ### 2. Agent Implementation
-1. Define specialized agents (DataCollector, Processor, StorageHandler)
-2. Configure communication patterns between agents
-3. Implement task routing logic
-4. Set up error handling and recovery mechanisms
+1. Define specialized agents:
+   - **Code Review Agent**: Reviews code for best practices and potential issues.
+   - **Security Analysis Agent**: Analyzes code for security vulnerabilities and compliance.
+2. Configure communication patterns between agents.
+3. Implement task routing logic for hybrid workflows.
+4. Set up error handling and recovery mechanisms.
 
 ### 3. Infrastructure Deployment
 1. Provision AKS cluster with specialized node pools:

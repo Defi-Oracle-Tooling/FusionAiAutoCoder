@@ -1,9 +1,9 @@
 """Type checking utilities and runtime verification."""
 
-from typing import Any, Callable, TypeVar, cast, Type, Optional
+from typing import Any, Callable, Optional, TypeVar, cast, Type
 from functools import wraps
 import logging
-from typeguard import TypeCheckError, typechecked
+from typeguard import TypeCheckError, typechecked  # type: ignore
 
 T = TypeVar("T")
 F = TypeVar("F", bound=Callable[..., Any])
@@ -19,20 +19,18 @@ def type_error_handler(error: TypeCheckError, stack: Optional[Any] = None) -> No
     raise error
 
 
-def strict_types(*type_args: Any, **type_kwargs: Any) -> Callable[[F], F]:
+@typechecked
+def strict_types(func: F) -> F:
     """Decorator for strict type checking."""
 
-    def decorator(func: F) -> F:
-        @wraps(func)
-        @typechecked
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            return func(*args, **kwargs)
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return func(*args, **kwargs)
 
-        return cast(F, wrapper)
-
-    return decorator
+    return cast(F, wrapper)
 
 
+@typechecked
 def ensure_type(value: Any, expected_type: Type[T]) -> T:
     """Ensure value matches expected type."""
     if not isinstance(value, expected_type):
@@ -42,24 +40,24 @@ def ensure_type(value: Any, expected_type: Type[T]) -> T:
     return cast(T, value)
 
 
+@typechecked
 def runtime_checkable(cls: Type[T]) -> Type[T]:
     """Class decorator for runtime type checking."""
     cls.__post_init__ = lambda self: validate_types(self)
     return cls
 
 
+@typechecked
 def validate_types(obj: Any) -> None:
     """Validate type annotations at runtime."""
     hints = getattr(obj.__class__, "__annotations__", {})
     for name, expected_type in hints.items():
         if hasattr(obj, name):
             value = getattr(obj, name)
-            try:
-                ensure_type(value, expected_type)
-            except TypeError as e:
-                raise TypeError(f"Invalid type for {name}: {e}")
+            ensure_type(value, expected_type)
 
 
+@typechecked
 def coerce_type(value: Any, target_type: Type[T]) -> T:
     """Attempt to coerce value to target type."""
     if isinstance(value, target_type):
