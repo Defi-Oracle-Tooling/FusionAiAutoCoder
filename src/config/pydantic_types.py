@@ -1,7 +1,7 @@
 """Pydantic model type configuration."""
 
 from typing import Any, Dict, List, Optional, TypeVar, Generic
-from pydantic import BaseModel, Field, ConfigDict, validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from pydantic.generics import GenericModel
 
 T = TypeVar("T")
@@ -31,11 +31,11 @@ class GenericResponse(GenericModel, Generic[T]):
     errors: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
 
-    @validator("errors")
+    @field_validator("errors")
     def validate_errors(
-        cls, v: Optional[List[str]], values: Dict[str, Any]
+        cls: Type[GenericResponse], v: Optional[List[str]], values: Dict[str, Any]
     ) -> Optional[List[str]]:
-        """Validate that errors are present only when success is False."""
+        """Validate errors field."""
         if values.get("success", True) and v:
-            raise ValueError("Errors should not be present when success is True")
+            raise ValueError("Cannot have errors when success is True")
         return v

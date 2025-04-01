@@ -23,7 +23,7 @@ class AgentRole(Enum):
 class AgentConfig:
     def __init__(
         self,
-        role: str,
+        role: AgentRole,
         name: str,
         description: str,
         capabilities: List[str],
@@ -31,13 +31,13 @@ class AgentConfig:
         temperature: float = 0.7,
         max_tokens: int = 1000,
     ):
-        self.role = role
-        self.name = name
-        self.description = description
-        self.capabilities = capabilities
-        self.parameters = parameters
-        self.temperature = temperature
-        self.max_tokens = max_tokens
+        self.role: AgentRole = role
+        self.name: str = name
+        self.description: str = description
+        self.capabilities: List[str] = capabilities
+        self.parameters: Dict[str, Any] = parameters
+        self.temperature: float = temperature
+        self.max_tokens: int = max_tokens
 
 
 class AgentOrchestrator:

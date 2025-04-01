@@ -2,9 +2,10 @@
 
 from typing import TypeVar, Dict, Any, Union, List, Optional, TypedDict
 from enum import Enum
-import torch
+import torch  # type: ignore
 import numpy as np
 from datetime import datetime
+import os
 
 
 class TaskType(Enum):
@@ -39,7 +40,7 @@ class TorchVersionInfo(TypedDict):
     torchvision_version: str
     torchaudio_version: str
     cuda_available: bool
-    device_info: Dict[str, Any]
+    device_info: Dict[str, Union[str, int, bool]]
 
 
 class TaskResult(TypedDict):
@@ -70,7 +71,7 @@ class ConfigurationError(Exception):
 
 
 # Type aliases
-TensorOrArray = Union[torch.Tensor, np.ndarray]
+TensorOrArray = Union[torch.Tensor, np.ndarray[Any, Any]]  # Represents a tensor or numpy array
 BatchData = List[Dict[str, Any]]
 ModelOutput = TypeVar("ModelOutput")  # Generic type for model outputs
 ConfigDict = Dict[str, Any]

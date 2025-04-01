@@ -3,14 +3,13 @@ Azure AI Foundry integration module for FusionAiAutoCoder.
 Provides interfaces to connect with Azure AI services.
 """
 
-from typing import Dict, Any, Optional, List, Union, Callable
+from typing import Dict, Any, Optional
 import os
 import logging
 import json
-import time
 import aiohttp
-import requests
-from datetime import datetime, timedelta
+from datetime import datetime  # type: ignore
+from datetime import timedelta
 
 from src.mocks.azure_ai_foundry import FoundryClient as MockFoundryClient
 
@@ -183,7 +182,7 @@ class AzureAIFoundry:
         """Check if the current auth token is expired."""
         if not self.token_expiry:
             return True
-        return datetime.utcnow() >= self.token_expiry
+        return datetime.now(datetime.timezone.utc) >= self.token_expiry
 
     async def _refresh_auth_token(self) -> None:
         """Refresh the authentication token."""
@@ -202,7 +201,7 @@ class AzureAIFoundry:
                     data = await response.json()
                     self.auth_token = data["access_token"]
                     expires_in = data.get("expires_in", 3600)
-                    self.token_expiry = datetime.utcnow() + timedelta(
+                    self.token_expiry = datetime.now(datetime.timezone.utc) + timedelta(
                         seconds=expires_in
                     )
                 else:

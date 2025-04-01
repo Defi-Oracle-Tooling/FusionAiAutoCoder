@@ -1,5 +1,5 @@
 from typing import Dict, Any
-import torch
+import torch  # type: ignore
 import torchvision  # type: ignore
 import torchaudio  # type: ignore
 import numpy as np

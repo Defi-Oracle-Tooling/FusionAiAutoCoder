@@ -3,9 +3,8 @@ Unit tests for the main module.
 """
 
 import pytest
-import os
-import json
 from unittest.mock import patch, MagicMock
+from typing import Dict, Any
 
 from src.main import hybrid_workflow, batch_process
 
@@ -24,14 +23,14 @@ TEST_TASK_CODE_OPTIMIZATION = {
 
 
 @pytest.fixture
-def mock_setup_agents():
+def mock_setup_agents() -> MagicMock:
     """Fixture to mock the setup_agents function."""
     with patch("src.main.setup_agents") as mock:
         # Create a mock agent orchestrator
         mock_orchestrator = MagicMock()
 
         # Configure the mock to return a predefined result
-        def mock_workflow(task_type, task_data):
+        def mock_workflow(task_type: str, task_data) -> Dict[str, Any]:
             if task_type == "code_generation":
                 return {
                     "code": "def validate_email(email):\n    # Implementation\n    pass",
@@ -69,8 +68,10 @@ def mock_get_version_info():
 
 
 def test_hybrid_workflow_code_generation(
-    mock_setup_agents, mock_gpu_available, mock_get_version_info
-):
+    mock_setup_agents: MagicMock,
+    mock_gpu_available: MagicMock,
+    mock_get_version_info: MagicMock,
+) -> None:
     """Test the hybrid_workflow function for code generation."""
     # Call the function under test
     result = hybrid_workflow("code_generation", TEST_TASK_CODE_GENERATION)

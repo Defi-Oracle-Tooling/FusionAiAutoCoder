@@ -1,12 +1,10 @@
 """Test multi-agent system functionality."""
 
-from typing import Dict, Any, Optional, List, AsyncGenerator
+from typing import Dict, Any, AsyncGenerator
 import pytest
-from unittest.mock import MagicMock
-import asyncio
 
 from src.config.config_multi_agents import AgentOrchestrator, AgentConfig, AgentRole
-from src.types import TaskType, TaskResult, ConfigDict
+from src.types import TaskType, ConfigDict
 
 
 @pytest.fixture
@@ -37,7 +35,6 @@ async def test_code_generation_workflow(mock_orchestrator: AgentOrchestrator) ->
         "language": "python",
         "complexity": "medium",
     }
-
     result: Dict[str, Any] = mock_orchestrator.create_workflow(
         TaskType.CODE_GENERATION.value, task_data
     )

@@ -1,9 +1,9 @@
 """Type checking utilities and runtime verification."""
 
-from typing import Any, Callable, Optional, TypeVar, cast, Type
+from typing import Any, Callable, Optional, TypeVar, Type, cast
 from functools import wraps
 import logging
-from typeguard import TypeCheckError, typechecked  # type: ignore
+from typeguard import TypeCheckError  # type: ignore
 
 T = TypeVar("T")
 F = TypeVar("F", bound=Callable[..., Any])
@@ -19,7 +19,7 @@ def type_error_handler(error: TypeCheckError, stack: Optional[Any] = None) -> No
     raise error
 
 
-@typechecked
+@typechecked  # type: ignore
 def strict_types(func: F) -> F:
     """Decorator for strict type checking."""
 
@@ -30,24 +30,24 @@ def strict_types(func: F) -> F:
     return cast(F, wrapper)
 
 
-@typechecked
+@typechecked  # type: ignore
 def ensure_type(value: Any, expected_type: Type[T]) -> T:
     """Ensure value matches expected type."""
     if not isinstance(value, expected_type):
         raise TypeError(
             f"Expected {expected_type.__name__}, got {type(value).__name__}"
         )
-    return cast(T, value)
+    return value
 
 
-@typechecked
+@typechecked  # type: ignore
 def runtime_checkable(cls: Type[T]) -> Type[T]:
     """Class decorator for runtime type checking."""
     cls.__post_init__ = lambda self: validate_types(self)
     return cls
 
 
-@typechecked
+@typechecked  # type: ignore
 def validate_types(obj: Any) -> None:
     """Validate type annotations at runtime."""
     hints = getattr(obj.__class__, "__annotations__", {})
@@ -57,11 +57,11 @@ def validate_types(obj: Any) -> None:
             ensure_type(value, expected_type)
 
 
-@typechecked
+@typechecked  # type: ignore
 def coerce_type(value: Any, target_type: Type[T]) -> T:
     """Attempt to coerce value to target type."""
     if isinstance(value, target_type):
-        return cast(T, value)
+        return value
     try:
         return target_type(value)
     except (ValueError, TypeError) as e:
