@@ -1,8 +1,10 @@
-from typing import Dict, Any
+"""Verify PyTorch installation and functionality."""
+
 import torch  # type: ignore
 import torchvision  # type: ignore
 import torchaudio  # type: ignore
-import numpy as np
+import numpy as np  # type: ignore
+from numpy.typing import NDArray  # type: ignore
 from src.types import TorchVersionInfo, TensorOrArray, TorchInstallError, GPUCheckResult
 
 
@@ -51,9 +53,12 @@ def test_torch_installation() -> bool:
     try:
         # Get versions
         version_info: TorchVersionInfo = get_version_info()
-        print(f"PyTorch Version: {version_info.torch_version}")
-        print(f"TorchVision Version: {version_info.torchvision_version}")
-        print(f"TorchAudio Version: {version_info.torchaudio_version}")
+        print(f"PyTorch Version: {version_info['torch_version']}")
+        print(f"TorchVision Version: {version_info['torchvision_version']}")
+        print(f"TorchAudio Version: {version_info['torchaudio_version']}")
+        print(f"CUDA Available: {version_info['cuda_available']}")
+        if version_info["cuda_available"]:
+            print(f"Device Info: {version_info['device_info']}")
 
         # Test operations
         tensor, array = test_basic_operations()
@@ -62,8 +67,9 @@ def test_torch_installation() -> bool:
 
         # Check GPU
         gpu_status: GPUCheckResult = test_gpu_availability()
-        print(f"CUDA Available: {version_info.cuda_available}")
-        print(f"Device: {version_info.device_info['device_name']}")
+        print(f"CUDA Available: {version_info['cuda_available']}")
+        if version_info["cuda_available"]:
+            print(f"Device: {version_info['device_info']['device_name']}")
 
         return True
     except Exception as e:

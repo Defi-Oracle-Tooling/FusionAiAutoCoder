@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Depends, Header
 from pydantic import BaseModel, Field
 import logging
 import json
-from datetime import datetime  # type: ignore
+from datetime import datetime, timezone  # type: ignore
 
 from src.main import run_workflow, run_batch_process
 from src.utils import get_version_info, setup_logging
@@ -64,7 +64,7 @@ async def read_root() -> Dict[str, Any]:
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     version_info: Dict[str, str] = get_version_info()
-    current_time = datetime.now(datetime.timezone.utc)
+    current_time = datetime.now(timezone.utc)
     return {
         "status": "healthy",
         "timestamp": current_time.isoformat(),

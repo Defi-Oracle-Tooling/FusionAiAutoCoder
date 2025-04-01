@@ -1,8 +1,10 @@
 """Test PyTorch installation and GPU functionality."""
 
 from typing import Dict, Any
-import pytest
-import numpy as np
+import pytest  # type: ignore
+import numpy as np  # type: ignore
+from numpy.testing import assert_array_equal  # type: ignore
+from numpy.typing import NDArray  # type: ignore
 
 from src.utils import is_gpu_available, get_gpu_info
 
@@ -17,12 +19,12 @@ def test_torch_import() -> None:
     assert hasattr(torch, "cuda")
 
 
-def test_basic_operations() -> tuple[torch.Tensor, np.ndarray[Any, Any]]:
+def test_basic_operations() -> tuple[torch.Tensor, NDArray[Any]]:
     """Test basic PyTorch operations."""
     x: torch.Tensor = torch.rand(5, 3)
     y: torch.Tensor = torch.rand(5, 3)
     z: torch.Tensor = x + y
-    numpy_array: np.ndarray[Any, Any] = z.numpy()
+    numpy_array: NDArray[Any] = z.numpy()
     return z, numpy_array
 
 

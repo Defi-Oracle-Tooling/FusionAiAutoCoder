@@ -1,9 +1,9 @@
-"""API testing module."""
+"""Test API functionality."""
 
-from typing import Dict, Any
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
+from typing import Dict, Any, Generator
+import pytest  # type: ignore
+from fastapi.testclient import TestClient  # type: ignore
+from unittest.mock import patch, MagicMock, AsyncMock  # type: ignore
 
 from src.api import app
 
@@ -15,7 +15,7 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-def mock_hybrid_workflow() -> MagicMock:
+def mock_hybrid_workflow() -> Generator[MagicMock, None, None]:
     """Fixture to mock the hybrid_workflow function."""
     with patch("src.main.hybrid_workflow") as mock:
 

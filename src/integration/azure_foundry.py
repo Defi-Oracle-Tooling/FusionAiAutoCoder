@@ -8,7 +8,7 @@ import os
 import logging
 import json
 import aiohttp
-from datetime import datetime  # type: ignore
+from datetime import datetime, timezone  # type: ignore
 from datetime import timedelta
 
 from src.mocks.azure_ai_foundry import FoundryClient as MockFoundryClient
@@ -90,8 +90,8 @@ class AzureAIFoundry:
             payload: Dict[str, Any] = {"prompt": prompt, "options": options or {}}
 
             # Check cache if enabled
+            cache_key: str = f"{endpoint}:{json.dumps(payload)}"
             if self.cache_enabled:
-                cache_key: str = f"{endpoint}:{json.dumps(payload)}"
                 if cache_key in self.request_cache:
                     return self.request_cache[cache_key]
 
@@ -182,7 +182,7 @@ class AzureAIFoundry:
         """Check if the current auth token is expired."""
         if not self.token_expiry:
             return True
-        return datetime.now(datetime.timezone.utc) >= self.token_expiry
+        return datetime.now(timezone.utc) >= self.token_expiry
 
     async def _refresh_auth_token(self) -> None:
         """Refresh the authentication token."""
@@ -201,7 +201,7 @@ class AzureAIFoundry:
                     data = await response.json()
                     self.auth_token = data["access_token"]
                     expires_in = data.get("expires_in", 3600)
-                    self.token_expiry = datetime.now(datetime.timezone.utc) + timedelta(
+                    self.token_expiry = datetime.now(timezone.utc) + timedelta(
                         seconds=expires_in
                     )
                 else:

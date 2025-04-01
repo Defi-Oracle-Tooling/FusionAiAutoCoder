@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Awaitable
 import os
 import logging
 import asyncio
+from datetime import datetime, timezone  # type: ignore
 
 from src.config.config_multi_agents import setup_agents
 from src.utils import setup_logging
@@ -16,7 +17,7 @@ from src.integration.azure_foundry import AzureAIFoundry
 logger: logging.Logger = setup_logging()
 
 
-def hybrid_workflow(task_type: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
+async def hybrid_workflow(task_type: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
     """Execute a hybrid workflow combining local and cloud processing."""
     # Initialize Azure AI Foundry client
     azure_foundry: AzureAIFoundry = AzureAIFoundry()

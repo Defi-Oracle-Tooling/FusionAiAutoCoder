@@ -1,21 +1,22 @@
 """Utility functions for FusionAiAutoCoder."""
 
 from typing import Dict, Any, Optional, Union
-import logging
 import os
 import json
 from pathlib import Path
 import torch  # type: ignore
-from datetime import datetime
+from datetime import datetime, timezone  # type: ignore
+from logging import Logger  # type: ignore
+import logging  # type: ignore
 
 
 def setup_logging(
     level: Optional[str] = None, log_file: Optional[str] = None
-) -> logging.Logger:
+) -> Logger:
     """Configure logging for the application."""
     log_level: int = getattr(logging, level or os.environ.get("LOG_LEVEL", "INFO"))
 
-    logger: logging.Logger = logging.getLogger("fusion_ai")
+    logger: Logger = logging.getLogger("fusion_ai")
     logger.setLevel(log_level)
 
     formatter: logging.Formatter = logging.Formatter(
@@ -23,15 +24,13 @@ def setup_logging(
     )
 
     # Console handler
-    console_handler: logging.StreamHandler[logging.LogRecord] = logging.StreamHandler()
+    console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
     # File handler if specified
     if log_file:
-        file_handler: logging.FileHandler[logging.LogRecord] = logging.FileHandler(
-            log_file
-        )
+        file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 

@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 import logging
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timezone  # type: ignore
 
 logger: logging.Logger = logging.getLogger("fusion_ai")
 
@@ -37,7 +37,7 @@ class FoundryClient:
         return {
             "code": code,
             "language": language,
-            "generated_at": datetime.now(datetime.timezone.utc).isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "model": "mock-foundry-codegen-v1",
             "processing_time": self.mock_processing_time,
             "prompt_tokens": len(prompt.split()),
@@ -100,7 +100,7 @@ class FoundryClient:
             "original_code": code,
             "language": language,
             "target": target,
-            "optimized_at": datetime.now(datetime.timezone.utc).isoformat(),
+            "optimized_at": datetime.now(timezone.utc).isoformat(),
             "model": "mock-foundry-optimizer-v1",
             "processing_time": self.mock_processing_time,
             "improvement_estimate": f"{random.randint(10, 35)}%",

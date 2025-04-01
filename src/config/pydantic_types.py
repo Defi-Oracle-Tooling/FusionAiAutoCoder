@@ -1,8 +1,9 @@
 """Pydantic model type configuration."""
 
-from typing import Any, Dict, List, Optional, TypeVar, Generic
-from pydantic import BaseModel, Field, ConfigDict, field_validator
-from pydantic.generics import GenericModel
+from typing import Dict, Any, List, Optional, TypeVar, Generic, Type  # type: ignore
+from pydantic import BaseModel, Field, ConfigDict, field_validator  # type: ignore
+from pydantic.generics import GenericModel  # type: ignore
+from pydantic.fields import ValidationInfo  # type: ignore
 
 T = TypeVar("T")
 
@@ -18,7 +19,7 @@ class BaseModelStrict(BaseModel):
         smart_union=True,
         validate_default=True,
         extra="forbid",
-        str_max_length=2**16,
+        str_max_length=65536,
         str_min_length=1,
     )
 
@@ -33,9 +34,9 @@ class GenericResponse(GenericModel, Generic[T]):
 
     @field_validator("errors")
     def validate_errors(
-        cls: Type[GenericResponse], v: Optional[List[str]], values: Dict[str, Any]
+        cls, v: Optional[List[str]], info: ValidationInfo
     ) -> Optional[List[str]]:
         """Validate errors field."""
-        if values.get("success", True) and v:
+        if info.data.get("success", True) and v:
             raise ValueError("Cannot have errors when success is True")
         return v

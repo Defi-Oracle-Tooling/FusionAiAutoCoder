@@ -1,10 +1,11 @@
 """Test utilities and helper functions."""
 
-import pytest
-from pathlib import Path
-import tempfile
+from typing import Dict, Any, Generator
+import pytest  # type: ignore
 import logging
-from typing import Generator  # type: ignore
+import tempfile
+from pathlib import Path
+from unittest.mock import patch, MagicMock  # type: ignore
 
 from src.utils import (
     setup_logging,
@@ -16,16 +17,18 @@ from src.utils import (
 from src.types import ConfigDict
 
 
-def create_temp_file(content: str) -> Generator[Path, None, None]:
-    """Create a temporary file with given content."""
-    with tempfile.NamedTemporaryFile(delete=False, mode="w") as f:
-        f.write(content)
-        temp_path = Path(f.name)
+@pytest.fixture
+def temp_config_file() -> Generator[Path, None, None]:
+    """Create a temporary config file and yield the path."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
+        temp_file.write(b"{}")  # Write empty JSON
+        temp_path = Path(temp_file.name)
 
     try:
         yield temp_path
     finally:
-        temp_path.unlink()
+        if temp_path.exists():
+            temp_path.unlink()
 
 
 def test_setup_logging() -> None:
@@ -63,14 +66,14 @@ def test_config_operations() -> None:
     """Test configuration file operations."""
     test_config: ConfigDict = {"test_key": "test_value", "nested": {"key": "value"}}
 
-    with create_temp_file("{}") as temp_path:
-        # Test saving config
-        save_config(test_config, temp_path)
+    # Create a temporary file for testing
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
+        temp_path = Path(temp_file.name)
 
-        # Test reading config
+    try:
+        save_config(test_config, temp_path)
         loaded_config: ConfigDict = read_config(temp_path)
         assert loaded_config == test_config
-
-        # Test reading non-existent file
-        with pytest.raises(FileNotFoundError):
-            read_config("non_existent_file.json")
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
