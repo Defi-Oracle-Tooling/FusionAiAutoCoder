@@ -9,7 +9,7 @@ import logging
 import asyncio
 from datetime import datetime, timezone  # type: ignore
 
-from src.config.config_multi_agents import setup_agents
+from src.config.config_multi_agents import setup_agents, AgentOrchestrator
 from src.utils import setup_logging
 from src.integration.azure_foundry import AzureAIFoundry
 
@@ -18,22 +18,23 @@ logger: logging.Logger = setup_logging()
 
 
 async def hybrid_workflow(task_type: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Execute a hybrid workflow combining local and cloud processing."""
-    # Initialize Azure AI Foundry client
+    """Execute a hybrid workflow combining local and cloud processing, with event bus integration."""
     azure_foundry: AzureAIFoundry = AzureAIFoundry()
     use_cloud: bool = os.environ.get("USE_CLOUD", "true").lower() == "true"
+    orchestrator: AgentOrchestrator = setup_agents()
 
-    # Initialize the agent orchestrator for local processing
-    orchestrator = setup_agents()
+    # Event bus: send workflow start event
+    if hasattr(orchestrator, "send_event"):
+        await orchestrator.send_event(
+            topic="agent.workflow.events",
+            message={"event": "workflow_start", "task_type": task_type, "data": task_data, "timestamp": datetime.now(timezone.utc).isoformat()}
+        )
 
     try:
         result: Dict[str, Any] = {}
-
         if use_cloud and task_data.get("complexity", "medium") == "high":
             try:
-                cloud_result: Dict[str, Any] = await _process_cloud_task(
-                    azure_foundry, task_type, task_data
-                )
+                cloud_result: Dict[str, Any] = await azure_foundry.process_cloud_task(task_type, task_data)
                 if "error" not in cloud_result:
                     result = cloud_result
                 else:
@@ -45,6 +46,12 @@ async def hybrid_workflow(task_type: str, task_data: Dict[str, Any]) -> Dict[str
         else:
             result = orchestrator.create_workflow(task_type, task_data)
 
+        # Event bus: send workflow end event
+        if hasattr(orchestrator, "send_event"):
+            await orchestrator.send_event(
+                topic="agent.workflow.events",
+                message={"event": "workflow_end", "task_type": task_type, "result": result, "timestamp": datetime.now(timezone.utc).isoformat()}
+            )
         return result
     except Exception as e:
         logger.error(f"Error in hybrid workflow: {str(e)}")
